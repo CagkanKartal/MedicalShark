@@ -92,14 +92,25 @@ elif menu == "Hasta Paneli (Veri Girişi)":
     st.header("📝 Sürecinizi Paylaşın")
     st.write("Platformun dinamik puanlama sistemini test edebilirsiniz. Bu form doldurulduğunda arka planda dinamik güven puanı hesaplanır.")
     
+    st.markdown("#### Tedavi Detayları Seçimi")
+    colA, colB = st.columns(2)
+    with colA:
+        hastalik = st.selectbox("Tedavi Alanı", ["Saç Ekimi", "Medikal Estetik", "KBB", "Göz Hastalıkları", "Dahiliye", "Cerrahi"])
+    
+    # Seçilen branşa göre 3'er doktor listele
+    doktor_map = {
+        "Saç Ekimi": ["Dr. Ahmet Yılmaz", "Dr. Serkan Ay", "Dr. Hakan Doğan"],
+        "Medikal Estetik": ["Dr. Burak Can", "Dr. Cansu Demir", "Dr. Elif Sarı"],
+        "KBB": ["Op. Dr. Mehmet Aslan", "Dr. Cenk Akyol", "Prof. Dr. Sinan Koç"],
+        "Göz Hastalıkları": ["Doç. Dr. Ali Yılmaz", "Op. Dr. Emre Taş", "Dr. Seda Vural"],
+        "Dahiliye": ["Uzm. Dr. Zeynep Kaya", "Dr. Kemal Erdem", "Uzm. Dr. Hasan Can"],
+        "Cerrahi": ["Prof. Dr. Ayşe Çelik", "Dr. Orhan Keskin", "Doç. Dr. Uğur Şen"]
+    }
+    
+    with colB:
+        klinik = st.selectbox("Doktor Seçimi", doktor_map[hastalik])
+    
     with st.form("hasta_formu", clear_on_submit=False):
-        st.markdown("#### Tedavi Detayları")
-        colA, colB = st.columns(2)
-        with colA:
-            hastalik = st.selectbox("Tedavi Alanı (Örnek Data)", ["KBB", "Göz Hastalıkları", "Dahiliye", "Cerrahi", "Saç Ekimi", "Medikal Estetik"])
-        with colB:
-            klinik = st.selectbox("Klinik / Doktor Seçimi", ["Dr. Ahmet Yılmaz", "Gözde Cerrahi Merkezi", "Estetik Clinic", "Şifa Hastanesi"])
-        
         surec = st.text_area("Sürecinizi detaylıca anlatın (AI bu metni analiz edecek)", height=150, placeholder="Örn: İlk görüşmeden taburcu olana kadar neler yaşandı? Beklentileriniz karşılandı mı?")
         
         st.markdown("---")
@@ -126,24 +137,32 @@ elif menu == "Doktor/Klinik Profilleri":
     st.header("👩‍⚕️ Liderlik Tablosu & Klinik Değerlendirmeleri")
     st.write("Kullanıcıların dinamik ve ağırlıklı oylarıyla oluşan manipülasyonsuz sıralama:")
     
-    # Sahte (Dummy) veri tablosu
+    # Sahte (Dummy) veri tablosu - Her alandan 3 doktor (Branş bilgisi dahil)
     data = {
-        "Klinik/Doktor": ["Estetik Clinic", "Dr. A (KBB)", "Gözde Cerrahi Merkezi", "Şifa Hastanesi", "Dr. B (Dahiliye)"],
-        "İletişim": [9.5, 8.5, 9.0, 7.5, 6.5],
-        "Açıklayıcılık": [9.0, 7.0, 9.5, 8.0, 7.0],
-        "Süreç Takibi": [9.2, 9.0, 8.5, 6.0, 5.0],
+        "Doktor (Branş)": [
+            "Dr. Ahmet Yılmaz (Saç Ekimi)", "Dr. Serkan Ay (Saç Ekimi)", "Dr. Hakan Doğan (Saç Ekimi)", 
+            "Dr. Burak Can (Medikal Estetik)", "Dr. Cansu Demir (Medikal Estetik)", "Dr. Elif Sarı (Medikal Estetik)",
+            "Op. Dr. Mehmet Aslan (KBB)", "Dr. Cenk Akyol (KBB)", "Prof. Dr. Sinan Koç (KBB)",
+            "Doç. Dr. Ali Yılmaz (Göz)", "Op. Dr. Emre Taş (Göz)", "Dr. Seda Vural (Göz)",
+            "Uzm. Dr. Zeynep Kaya (Dahiliye)", "Dr. Kemal Erdem (Dahiliye)", "Uzm. Dr. Hasan Can (Dahiliye)",
+            "Prof. Dr. Ayşe Çelik (Cerrahi)", "Dr. Orhan Keskin (Cerrahi)", "Doç. Dr. Uğur Şen (Cerrahi)"
+        ],
+        "İletişim": [8.8, 9.5, 8.5, 9.0, 6.5, 7.5, 9.8, 8.0, 7.2, 9.6, 6.0, 8.2, 7.9, 9.1, 8.4, 6.8, 8.7, 9.3],
+        "Açıklayıcılık": [8.2, 9.0, 7.0, 9.5, 7.0, 8.0, 9.1, 8.8, 7.5, 9.2, 6.5, 8.5, 8.1, 8.9, 7.7, 6.9, 8.6, 9.4],
+        "Süreç Takibi": [8.9, 9.2, 9.0, 8.5, 5.0, 6.0, 9.7, 7.9, 8.0, 9.0, 4.5, 7.0, 7.5, 8.8, 8.1, 6.2, 8.9, 9.5]
     }
     df = pd.DataFrame(data)
     
     # AI Puanı Hesaplama
     df["Genel AI Puanı"] = (df["İletişim"] * 0.3) + (df["Açıklayıcılık"] * 0.3) + (df["Süreç Takibi"] * 0.4)
     df = df.sort_values(by="Genel AI Puanı", ascending=False).reset_index(drop=True)
+    df.index = df.index + 1  # Liderlik tablosu 1'den başlasın
     
     # Stilize Tablo
     st.dataframe(
         df.style.background_gradient(cmap='Greens', subset=['Genel AI Puanı']).format({'Genel AI Puanı': '{:.2f}'}),
         width='stretch',
-        height=300
+        height=450
     )
 
 elif menu == "🧠 AI Deneyim Analizi":
@@ -157,7 +176,16 @@ elif menu == "🧠 AI Deneyim Analizi":
         st.error("⚠️ Sistem Hatası: API Anahtarı sunucuda bulunamadı. Lütfen yöneticiye bildirin.")
         api_key = None
     
-    secilen_alan = st.selectbox("Analiz Edilecek Klinik/Tedavi Seçin", ["Dr. Ahmet Yılmaz - Saç Ekimi", "Gözde Cerrahi - Lazer Epilasyon"])
+    secilen_alan = st.selectbox("Analiz Edilecek Doktor Seçin", [
+        "Dr. Ahmet Yılmaz (Saç Ekimi)",
+        "Dr. Serkan Ay (Saç Ekimi)",
+        "Dr. Burak Can (Medikal Estetik)",
+        "Op. Dr. Mehmet Aslan (KBB)",
+        "Doç. Dr. Ali Yılmaz (Göz Hastalıkları)",
+        "Op. Dr. Emre Taş (Göz Hastalıkları)",
+        "Uzm. Dr. Zeynep Kaya (Dahiliye)",
+        "Prof. Dr. Ayşe Çelik (Cerrahi)",
+    ])
     
     # Sisteme gömdüğümüz sahte kullanıcı yorumları (Sanki veritabanından çekilmiş gibi)
     dummy_yorumlar = """
